@@ -23,6 +23,7 @@ def get_mac_address(bytes_address):
     return ':'.join(bytes_str).upper()
 
 # Unpacks IPv4 Packet
+
 def ipv4_packet(data):
     version_header_length = data[0]
     version = version_header_length >> 4
@@ -35,5 +36,20 @@ def ipv4_packet(data):
 def ipv4(address):
     return '.'.join(map(str,address))
 
+# Unpacks ICMP Packet
+def icmp_packet(data):
+    icmp_type, code, checksum = struct.unpack('! B B H', data[:4])
+    return icmp_type, code, checksum, data[4:]
 
+# Unpacks TCP
+def tcp_segment(data):
+    (src_port, dest_port, sequence, acknowledgement, offset_reserved_flags) = struct.unpack('! H H L H H ', data[:14])
+    offset = (offset_reserved_flags >> 12) * 4
+    flag_urg = (offset_reserved_flags & 32) >> 5
+    flag_ack = (offset_reserved_flags & 16) >> 5
+    flag_psh = (offset_reserved_flags & 8) >> 5
+    flag_rst = (offset_reserved_flags & 4) >> 5
+    flag_syn = (offset_reserved_flags & 2) >> 5
+    flag_fin = offset_reserved_flags & 1
+    return src_port, dest_port, sequence, acknowledgement, flag_ack, flag_fin, flag_psh, flag_rst, flag_syn, flag_urg, data[offset:]
 main()
